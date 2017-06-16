@@ -31,38 +31,38 @@ def main():
     image = Image.open(args.input_image)
 
     ###############################################################################
-    # Encode message into image
+    # Encoding message into image
     ###############################################################################
     if args.message:
 
-        if args.verbose: print("Converting \"{}\" to binary".format(args.message))
+        if args.verbose: print("Converting \"{}\" to binary...".format(args.message))
         binaryMessage = toBinary(args.message)[2:]
 
-        # Check if picture has enough pixels to store message
+        # Check that picture is large enough to contain message
         image = Image.open(args.input_image)
-        xMax, yMax = image.size
-        if len(binaryMessage) > (xMax * yMax * 3):
+
+        if len(binaryMessage) > (image.size[0] * image.size[1] * 3):
             print("This image is too small to contain your message!\nExiting...")
             exit(2)
 
+        # Encode image with message data
         encodedPixelData = encodeMessage(image, binaryMessage, image.size, args.verbose)
+
+        # Create new image file
         savedImage = Image.frombytes('RGB', image.size, bytes(encodedPixelData))
         savedImage.save(args.output_filename + '.png', 'PNG')
-        if args.verbose:
-            print("Saved encoded data as \"{}.png\"".format(args.output_filename))
+        if args.verbose: print("Saved encoded data as \"{}.png\"".format(args.output_filename))
 
     ###############################################################################
-    # Decode message from image
+    # Decoding message from image
     ###############################################################################
     elif args.decode:
         byteList = extractMessage(image, image.size, args.verbose)
         message = "" 
-        if args.verbose: print("Converting binary to text")
+        if args.verbose: print("Converting binary to text...")
         for byte in byteList:
             message += toText(byte)
-        print("hidden message:\n{}".format(message))
-        
-    
+        print("\n{}\n\nDone".format(message))
 
 
 def toBinary(string):
@@ -94,6 +94,7 @@ def encodeMessage(image, binaryMessage, size, verbose):
 
     # How much of message has been encoded
     bitsInjected = 0
+    delimBits = 0
 
     # Byte buffer for pixel data
     imageData = []
@@ -103,16 +104,20 @@ def encodeMessage(image, binaryMessage, size, verbose):
         for x in range(size[0]):
             for index, color in enumerate(image.getpixel((x,y))):
 
-                # Encode LSB to one bit of the message string
+                # Encode one bit of the message string
                 if bitsInjected < len(binaryMessage):
                     imageData.append(((color >> 1) << 1) | int(binaryMessage[bitsInjected]))
                     bitsInjected += 1
 
-                # Zero out LSB after message has been fully encrypted
-                else:
+                # Zero out 8 LSB as message delimeter
+                elif delimBits < 8:
                     imageData.append(color & 254)
+                    delimBits += 1
+                
+                # After message & delimeter are encoded, pass image data through
+                else:
+                    imageData.append(color)
 
-    if verbose: print("Encoding complete")
     return imageData
 
 def extractMessage(image, size, verbose):
