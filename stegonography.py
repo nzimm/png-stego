@@ -26,20 +26,14 @@ def main():
 
     # Prime input image
     image = Image.open(args.input_image)
-###############
-    message = "TTT"
-    bMessage = "0b1010100"
-    print(toBinary(message, args.verbose))
-    print(bMessage)
-    print(toText(bMessage, args.verbose))
-###############
 
-    ###########################
+    ###############################################################################
     # Encode message into image
-    ###########################
+    ###############################################################################
     if args.message:
-        # Cut the leading '0b' off of the message
-        binaryMessage = toBinary(args.message, args.verbose)[2:]
+
+        if args.verbose: print("Converting \"{}\" to binary".format(args.message))
+        binaryMessage = toBinary(args.message)[2:]
 
         # Check if picture has enough pixels to store message
         image = Image.open(args.input_image)
@@ -52,38 +46,37 @@ def main():
         savedImage = Image.frombytes('RGB', image.size, bytes(encodedPixelData))
         savedImage.save(args.output_filename + '.png', 'PNG')
         if args.verbose:
-            savedImage.show()
             print("Saved encoded data as \"{}.png\"".format(args.output_filename))
 
-    ###########################
+    ###############################################################################
     # Decode message from image
-    ###########################
+    ###############################################################################
     elif args.decode:
-        message = extractMessage(image, image.size, args.verbose)
+        byteList = extractMessage(image, image.size, args.verbose)
+        message = "" 
+        if args.verbose: print("Converting binary to text")
+        for byte in byteList:
+            message += toText(byte)
         print("hidden message:\n{}".format(message))
         
     
 
 
-def toBinary(string, verbose):
+def toBinary(string):
     ''' Converts a string into binary of the form 0b<binary>
         
         Input: ascii string
         Output: binary translation
     '''
-    if verbose: print("Converted \"{}\" to binary".format(string))
-
     return bin(int.from_bytes(string.encode(encoding="ascii"), byteorder='big'))
 
 
-def toText(binaryMessage, verbose):
+def toText(binaryMessage):
     ''' Converts a binary string of the form 0b<binary> into an ascii string
         
         Input: binary
         Output: ascii string
     '''
-    if verbose: print("Converted binary to text")
-
     string = int(binaryMessage, 2)
     return string.to_bytes((string.bit_length() + 7) // 8, byteorder='big').decode(encoding="ascii")
 
@@ -128,30 +121,36 @@ def extractMessage(image, size, verbose):
     if verbose: print("Extracting message...")
 
     # Buffer to store message
-    message = "0b"
+    message = "0b0"
 
     # Return message after finding first \x00
-    bitCounter = 0
-    zeroCounter = 0
+    bitCount = 1
+
+    # List of bytes to translate back into text
+    byteList = []
+    byte = ""
 
     # Loop through picture and store all LSB in message
     for y in range(size[1]):
         for x in range(size[0]):
             for color in image.getpixel((x,y)):
-                message += str(color & 1)
-                bitCounter += 1
-                if(str(color&1) == "0"):
-                    zeroCounter += 1
 
-                # Return once reaching a null character
-                if bitCounter == 8 and zeroCounter == 8:
-                    return toText(message, verbose)
-                else:
-                    bitCounter = zeroCounter = 0
+                # One bit of the message
+                byte += str(color & 1)
+                bitCount += 1
+
+                # Save each character of message
+                if bitCount == 8:
+
+                    # If we encounter the end of the message
+                    if byte == "00000000":
+                        return byteList
+
+                    byteList.append(byte)
+                    bitCount = 0
+                    byte = ""
                     
-
-    print(message)
-    return toText(message, verbose)
+    return byteList
     
 
 if __name__ == "__main__":
