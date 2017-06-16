@@ -5,8 +5,11 @@ from PIL import Image
 
 ################################################################################
 # Steganography - the practice of hiding data "in plain sight"
-#   Encodes a message string into an image by manipulating the naked eye's
-#   inability to decipher a 1-bit difference in a pixel's color
+#
+#   Encodes and decodes messages hidden in the LSB of an image file 
+#
+#   NOTE: Currently only supports .png files, the complexity of the encoding
+#         algorithm is much greater for compressive image files
 ################################################################################
 
 def main():
