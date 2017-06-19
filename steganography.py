@@ -81,8 +81,12 @@ def toText(binaryMessage):
         Input: binary
         Output: ascii string
     '''
-    string = int(binaryMessage, 2)
-    return string.to_bytes((string.bit_length() + 7) // 8, byteorder='big').decode(encoding="ascii")
+    try:
+        string = int(binaryMessage, 2)
+        return string.to_bytes((string.bit_length() + 7) // 8, byteorder='big').decode(encoding="ascii")
+    except UnicodeDecodeError:
+        print("No message found, are you sure your input file was properly encoded?")
+        exit(3)
 
 
 def encodeMessage(image, binaryMessage, size, verbose):
