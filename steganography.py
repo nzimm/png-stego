@@ -8,8 +8,8 @@ from PIL import Image
 #
 #   Encodes and decodes messages hidden in the LSB of an image file 
 #
-#   NOTE: Currently only supports .png files, the complexity of the encoding
-#         algorithm is much greater for compressive image files
+#   NOTE: Currently only supports .png files, as encoding messages into .jgp
+#         or other compressive image formats gets tricky
 ################################################################################
 
 def main():
@@ -76,6 +76,7 @@ def toBinary(string):
 
 def toText(binaryMessage):
     ''' Converts a binary string of the form 0b<binary> into an ascii string
+        If UnicodeDecodeError, then report back error
         
         Input: binary
         Output: ascii string
