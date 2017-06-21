@@ -155,8 +155,8 @@ def getBinaryMessage(image):
         for x in range(image.size[0]):
             for color in image.getpixel((x,y)):
 
-                # One bit of the message
-                byte += str(color & 1)
+                # Store last bit of image[x][y][color]
+                byte += bin(color)[9]
                 bitCount += 1
 
                 # Save each character of message
