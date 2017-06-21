@@ -88,7 +88,8 @@ def encodeMessage(imageFile, outputFile, message, verbose=False):
 
                 # Encode one bit of the message string
                 if bitsInjected < len(binaryMessage):
-                    imageData.append(((color >> 1) << 1) | int(binaryMessage[bitsInjected]))
+                    # Set LSB of color to one bit of the binaryMessage
+                    imageData.append(color & (254 + int(binaryMessage[bitsInjected])))
                     bitsInjected += 1
 
                 # Zero out 8 LSB as message delimeter
@@ -121,15 +122,12 @@ def extractMessage(imageFile, verbose=False):
     image = Image.open(imageFile)
 
     if verbose: print("Extracting message...")
-
     byteList = getBinaryMessage(image)
 
     if verbose: print("Converting binary to text...")
-
-    message = ""
     for byte in byteList:
-        message += toText(byte)
-    print("\n{}\n\nDone".format(message))
+        print(toText(byte), end="")
+    print("\n\nDone")
 
 
 def getBinaryMessage(image):
@@ -155,7 +153,7 @@ def getBinaryMessage(image):
         for x in range(image.size[0]):
             for color in image.getpixel((x,y)):
 
-                # Store last bit of image[x][y][color]
+                # Store last bit of pixel's color
                 byte += bin(color)[9]
                 bitCount += 1
 
