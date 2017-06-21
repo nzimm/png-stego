@@ -133,6 +133,12 @@ def extractMessage(imageFile, verbose=False):
 
 
 def getBinaryMessage(image):
+    ''' Stores the LSB of each color for each pixel until encountering
+        a \x00 character
+
+        Input: image <Image>
+        Output: byteList [string]
+    '''
 
     # Buffer to store message
     message = "0b0"
