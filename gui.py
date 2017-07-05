@@ -222,7 +222,6 @@ class MainWidget(QWidget):
             Input: None
             Output: None
         '''
-        print(self.inputMessage.displayText())
         encodeMessage(os.path.join(self.imagePath, self.imageSelector.currentText()),
                       os.path.join(sys.path[0], self.tempImage), self.inputMessage.displayText())
 

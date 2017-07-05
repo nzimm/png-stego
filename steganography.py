@@ -165,7 +165,6 @@ def getBinaryMessage(image):
 
                 # Save each character of message
                 if bitCount == 8:
-                    print(byte)
 
                     # If we encounter the end of the message
                     if byte == "00000000":
