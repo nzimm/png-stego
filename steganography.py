@@ -8,8 +8,8 @@ from PIL import Image
 #
 #   Encodes and decodes messages hidden in the LSB of an image file 
 #
-#   NOTE: Currently only supports .png files, as encoding messages into .jgp
-#         or other compressive image formats gets tricky
+#   NOTE: Currently only supports .png files, as .jpeg files have lossy
+#         compression, complicating the encoding process 
 ################################################################################
 
 def main():
@@ -31,8 +31,8 @@ def main():
 def toBinary(string):
     ''' Converts a string into binary of the form 0b<binary>
         
-        Input: ascii string
-        Output: binary translation
+        Input: string <ascii text>
+        Output: string <binary>
     '''
     return bin(int.from_bytes(string.encode(encoding="ascii"), byteorder='big'))
 
@@ -103,8 +103,8 @@ def encodeMessage(imageFile, outputFile, message, verbose=False):
 
     # Create new image file
     savedImage = Image.frombytes('RGB', image.size, bytes(imageData))
-    savedImage.save(outputFile + '.png', 'PNG')
-    if verbose: print("Saved encoded data as \"{}.png\"\nDone".format(outputFile))
+    savedImage.save(outputFile, 'PNG')
+    if verbose: print("Saved encoded data as \"{}\"\nDone".format(outputFile))
 
 
 def extractMessage(imageFile, verbose=False):
