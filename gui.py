@@ -82,19 +82,25 @@ class MainWidget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
-        # Initialize variables/file structre
+        #####################################
+        # Initialize variables/file structure
+        #####################################
         self.tempImage = "tempImage.png"
         self.encodedImagesDirectory = "encodedImages"
         if not os.path.exists(os.path.join(sys.path[0], self.encodedImagesDirectory)):
             os.mkdir(os.path.join(sys.path[0], self.encodedImagesDirectory))
 
-        # Create main layout
+        ################
+        # Create layouts
+        ################
         self.mainLayout = QHBoxLayout(self)
         self.leftLayout = QVBoxLayout()
         self.selectorLayout = QHBoxLayout()
         self.messageLayout = QHBoxLayout()
         self.rightLayout = QVBoxLayout()
         self.saveFileLayout = QHBoxLayout()
+
+#        self.leftLayout.setSizePolicy(QSizePolicy.QSizePolicy(minimum, minimum))
 
         #########################
         # Left side functionality
@@ -110,6 +116,9 @@ class MainWidget(QWidget):
         self.embeddedImageLabel = QLabel()
         self.imageSelector.currentTextChanged.connect(self.showImage)
 
+        # Line edit for message
+        self.inputMessage = QLineEdit(placeholderText="Message")
+
         # Setup image preview
             # Create label to display image in
         self.imageLabel = QLabel()
@@ -118,14 +127,14 @@ class MainWidget(QWidget):
         self.imageObject = QImage()
             # Initialize QImageReader
         self.imageReader = QImageReader()
-            # Call show image method
-        self.showImage()
-            
-        # Line edit for message
-        self.inputMessage = QLineEdit(placeholderText="Message")
 
         # Push button to encode message
-        self.generateEncodedImageButton = QPushButton("Encode Message")
+        buttonText = "Encode Message"
+        self.generateEncodedImageButton = QPushButton(buttonText)
+            # Set button width
+        width = self.generateEncodedImageButton.fontMetrics().boundingRect(buttonText).width() + 7
+        self.generateEncodedImageButton.setMaximumWidth(width)
+            # Link button with functionality
         self.generateEncodedImageButton.clicked.connect(self.generateEncodedImage)
 
         ###########################
@@ -147,7 +156,10 @@ class MainWidget(QWidget):
         # Line edit to name output image
         self.nameOutputImage = QLineEdit(placeholderText="Output image name")
         self.nameOutputImage.setText("output.png")
-        self.saveImageButton = QPushButton("Save encoded image")
+        buttonText = "Save encoded image"
+        self.saveImageButton = QPushButton(buttonText)
+        width = self.saveImageButton.fontMetrics().boundingRect(buttonText).width() + 7
+        self.saveImageButton.setMaximumWidth(width)
         self.saveImageButton.clicked.connect(self.saveImage)
 
         #####################################
@@ -156,23 +168,26 @@ class MainWidget(QWidget):
             # Left side
         self.mainLayout.addLayout(self.leftLayout)
         self.leftLayout.addLayout(self.selectorLayout)
-#        self.leftLayout.addStretch(0)
+        self.leftLayout.addStretch(0)
         self.leftLayout.addWidget(self.imageLabel)
-        #self.leftLayout.addStretch(0)
+        self.leftLayout.addStretch(0)
         self.leftLayout.addLayout(self.messageLayout)
         self.selectorLayout.addWidget(self.imageSelector)
-        self.selectorLayout.addWidget(self.imageSelector, alignment=Qt.AlignTop | Qt.AlignHCenter)
         self.messageLayout.addWidget(self.inputMessage) 
-        self.messageLayout.addWidget(self.generateEncodedImageButton, alignment=Qt.AlignRight) 
+        self.messageLayout.addWidget(self.generateEncodedImageButton)#, alignment=Qt.AlignLeft) 
             # Centerline separator
         self.mainLayout.addWidget(self.verticalSeparator, alignment=Qt.AlignHCenter)
             # Right side
         self.mainLayout.addLayout(self.rightLayout)
-        self.rightLayout.addStretch(0)
-        self.rightLayout.addWidget(self.embeddedImageLabel, alignment=Qt.AlignCenter)
+#        self.rightLayout.addStretch(0)
+        self.rightLayout.addWidget(self.embeddedImageLabel, alignment=Qt.AlignBottom)
         self.rightLayout.addLayout(self.saveFileLayout)
         self.saveFileLayout.addWidget(self.nameOutputImage)
-        self.saveFileLayout.addWidget(self.saveImageButton, alignment=Qt.AlignRight)
+        self.saveFileLayout.addWidget(self.saveImageButton)
+
+        # Display image
+        self.showImage()
+
 
 
     def showImage(self):
@@ -191,9 +206,13 @@ class MainWidget(QWidget):
         # Display image
         self.imageLabel.setPixmap(QPixmap(selectedImagePath))
 
+        # Adjust QLineEdit lengths to match image width
+        self.inputMessage.setFixedWidth(self.imageLabel.width() - self.generateEncodedImageButton.width())
+        self.nameOutputImage.setFixedWidth(self.imageLabel.width() - self.saveImageButton.width())
+
         # Set up right side image label
-        self.embeddedImageLabel.setText("Encode a message to see resulting image")
         self.embeddedImageLabel.setFixedSize(image.size[0], image.size[1])
+        self.embeddedImageLabel.setText("Encode a message to see resulting image")
 
 
     def generateEncodedImage(self):
@@ -203,19 +222,22 @@ class MainWidget(QWidget):
             Input: None
             Output: None
         '''
-        self.embeddedImageLabel.setText("Encoding...")
+        print(self.inputMessage.displayText())
         encodeMessage(os.path.join(self.imagePath, self.imageSelector.currentText()),
-                      self.tempImage, str(self.inputMessage.displayText), False)
-        self.embeddedImageLabel.setPixmap(QPixmap(os.path.join(self.imagePath, self.nameOutputImage.displayText())))
+                      os.path.join(sys.path[0], self.tempImage), self.inputMessage.displayText())
+
+        self.embeddedImageLabel.setPixmap(QPixmap(os.path.join(sys.path[0], self.tempImage)))
 
     def saveImage(self):
-        ''' Renames the output image to the user's input
+        ''' Copies the currently displayed encoded image to the output name of user's choice
 
             Input: None
             Output: None
         '''
-        shutil.copyfile(os.path.join(sys.path[0], self.tempImage),
-                        os.path.join(sys.path[0], self.encodedImagesDirectory, self.nameOutputImage.displayText()))
+        outputFileName = self.nameOutputImage.displayText()
+        if not outputFileName[-4:] == ".png": outputFileName += ".png"
+        shutil.copy(os.path.join(sys.path[0], self.tempImage),
+                    os.path.join(sys.path[0], self.encodedImagesDirectory, outputFileName))
 
 
 def main():

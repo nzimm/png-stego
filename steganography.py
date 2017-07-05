@@ -18,7 +18,7 @@ def main():
     parser.add_argument("-m", "--message", help="Message to encode in input file", type=str)
     parser.add_argument("-d", "--decode", help="Decode input file", action="store_true")
     parser.add_argument("-o", "--output_filename", help="Name for output image", type=str,
-                                          default="output", nargs='?')
+                                          default="output.png", nargs='?')
     parser.add_argument("-v", "--verbose", help="Enable verbose output", action="store_true")
     args = parser.parse_args()
 
@@ -89,7 +89,8 @@ def encodeMessage(imageFile, outputFile, message, verbose=False):
                 # Encode one bit of the message string
                 if bitsInjected < len(binaryMessage):
                     # Set LSB of color to one bit of the binaryMessage
-                    imageData.append(color & (254 + int(binaryMessage[bitsInjected])))
+                    # Mask color with 254 to gaurantee LSB is 0, then set LSB to message bit
+                    imageData.append(color & 254 | int(binaryMessage[bitsInjected]))
                     bitsInjected += 1
 
                 # Zero out 8 LSB as message delimeter
@@ -103,7 +104,11 @@ def encodeMessage(imageFile, outputFile, message, verbose=False):
 
     # Create new image file
     savedImage = Image.frombytes('RGB', image.size, bytes(imageData))
+
+    # Ensure output file ends with ".png"
+#    if not outputFile[-4:] == ".png": outputFile += ".png"
     savedImage.save(outputFile, 'PNG')
+
     if verbose: print("Saved encoded data as \"{}\"\nDone".format(outputFile))
 
 
@@ -127,6 +132,7 @@ def extractMessage(imageFile, verbose=False):
     if verbose: print("Converting binary to text...")
     for byte in byteList:
         print(toText(byte), end="")
+
     print("\n\nDone")
 
 
@@ -146,19 +152,20 @@ def getBinaryMessage(image):
 
     # List of bytes to translate back into text
     byteList = []
-    byte = ""
+    byte = "0"
 
     # Loop through picture and store all LSB in message
     for y in range(image.size[1]):
         for x in range(image.size[0]):
             for color in image.getpixel((x,y)):
 
-                # Store last bit of pixel's color
-                byte += bin(color)[9]
+                # Store last bit of pixel's color, e.g. 0b1110011(0)
+                byte += bin(color)[-1]
                 bitCount += 1
 
                 # Save each character of message
                 if bitCount == 8:
+                    print(byte)
 
                     # If we encounter the end of the message
                     if byte == "00000000":
