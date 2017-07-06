@@ -25,7 +25,7 @@ def main():
     if args.message:
         encodeMessage(args.input_image, args.output_filename, args.message, args.verbose)
     elif args.decode:
-        extractMessage(args.input_image, args.verbose)
+        print(extractMessage(args.input_image, args.verbose))
 
 
 def toBinary(string):
@@ -118,6 +118,8 @@ def extractMessage(imageFile, verbose=False):
         Input: <input_image>, <image_size>, <verbosity_flag>
         Output: <message>
     '''
+    # Initialize message
+    message = ""
     # Check image format 
     if imghdr.what(imageFile) != "png":
         print("Sorry, but this program only supports .png image formats")
@@ -131,9 +133,9 @@ def extractMessage(imageFile, verbose=False):
 
     if verbose: print("Converting binary to text...")
     for byte in byteList:
-        print(toText(byte), end="")
+        message += toText(byte)
 
-    print("\n\nDone")
+    return message
 
 
 def getBinaryMessage(image):

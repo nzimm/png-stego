@@ -2,7 +2,7 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from steganography import encodeMessage, extractMessage
+from steganography import encodeMessage
 from PIL import Image
 import sys, os, shutil
 
@@ -17,7 +17,7 @@ class App(QApplication):
         QApplication.__init__(self, sys.argv)
 
         # Set application name
-        self.setApplicationName("Basic GUI")
+        self.setApplicationName("Encoding GUI")
 
         # Create main window
         self.mainWindow = MainWindow()
@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self)
 
         # Initialize this window
-        self.setWindowTitle("Steganography")
+        self.setWindowTitle("Message encoder")
 
         # Set the size of the main window
         self.resize(1080, 720)
