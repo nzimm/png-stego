@@ -6,8 +6,7 @@ from PIL import Image
 ################################################################################
 # Steganography - the practice of hiding data "in plain sight"
 #
-#   Encodes and decodes messages hidden in the LSB of an image file 
-#
+#   Encodes and decodes messages hidden in the LSB of an image file #
 #   NOTE: Currently only supports .png files, as .jpeg files have lossy
 #         compression, complicating the encoding process 
 ################################################################################
@@ -49,8 +48,7 @@ def toText(binaryMessage):
         return string.to_bytes((string.bit_length() + 7) // 8, byteorder='big').decode(encoding="ascii")
     except UnicodeDecodeError:
         print("No message found, are you sure your input file was properly encoded?")
-        exit(3)
-
+        return
 
 def encodeMessage(imageFile, outputFile, message, verbose=False):
     ''' Unpacks image, and encodes the message in LSB format
@@ -132,8 +130,12 @@ def extractMessage(imageFile, verbose=False):
     byteList = getBinaryMessage(image)
 
     if verbose: print("Converting binary to text...")
-    for byte in byteList:
-        message += toText(byte)
+    try:
+        for byte in byteList:
+            message += toText(byte)
+    except TypeError as err:
+        print(err)
+        return "No message found"
 
     return message
 

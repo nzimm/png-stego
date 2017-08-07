@@ -80,6 +80,7 @@ class MainWidget(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.mainLayout = QVBoxLayout(self)
+        self.imageSelectorLayout = QHBoxLayout(self)
 
         #####################################
         # Initialize variables/file structure
@@ -88,16 +89,42 @@ class MainWidget(QWidget):
         if not os.path.exists(os.path.join(sys.path[0], self.encodedImagesDirectory)):
             os.mkdir(os.path.join(sys.path[0], self.encodedImagesDirectory))
 
-        
-        # Setup image selector combobox
+        # Setup image selector layout
+            # Image selector label
+        labelText = "Select an image"
+        self.imageSelectorLabel = QLabel(labelText)
+            # Set width
+        width = self.imageSelectorLabel.fontMetrics().boundingRect(labelText).width()
+        self.imageSelectorLabel.setMaximumWidth(width)
+            # Setup image selector combobox
         self.imageSelector = QComboBox()
             # Path to image directory
         self.imagePath = os.path.join(sys.path[0], "encodedImages")
             # Add all images to imageSelector 
         self.imageSelector.addItems(os.listdir(self.imagePath))
-
+            # Autodecode checkbox and decode button
+        checkboxText = "Decode automatically"
+        self.autoDecodeImage = QCheckBox(checkboxText)
+            # Set width
+        width = self.autoDecodeImage.fontMetrics().boundingRect(checkboxText).width() + 20
+        self.autoDecodeImage.setMaximumWidth(width)
+            # Connect signal
+        self.autoDecodeImage.stateChanged.connect(self.toggleDecodeButton)
+            # Decode button
+        buttonText = "Decode image"
+        self.decodeButton = QPushButton(buttonText)
+        width = self.decodeButton.fontMetrics().boundingRect(labelText).width() + 7
+        self.decodeButton.setMaximumWidth(width)
+        self.decodeButton.clicked.connect(self.decodeMessage)
+            # Compile imageSelectorLabel
+        self.imageSelectorLayout.addWidget(self.imageSelectorLabel)
+        self.imageSelectorLayout.addWidget(self.imageSelector)
+        self.imageSelectorLayout.addWidget(self.autoDecodeImage)
+        self.imageSelectorLayout.addWidget(self.decodeButton)
+        
         # Initialize image label and update image when selected in ComboBox
         self.imageLabel = QLabel()
+        self.messageFoundLabel = QLabel()
         self.messageLabel = QLabel()
         self.imageSelector.currentTextChanged.connect(self.showImage)
 
@@ -106,11 +133,11 @@ class MainWidget(QWidget):
         #####################
         # Compile Main Layout
         #####################
-        self.mainLayout.addWidget(self.imageSelector)
+        self.mainLayout.addLayout(self.imageSelectorLayout)
+        self.mainLayout.addWidget(self.messageFoundLabel, alignment=Qt.AlignHCenter)
+        self.mainLayout.addWidget(self.messageLabel, alignment=Qt.AlignHCenter)
+        self.mainLayout.addStretch(0)
         self.mainLayout.addWidget(self.imageLabel)
-        self.mainLayout.addWidget(self.messageLabel)
-
-
 
 
     def showImage(self):
@@ -120,6 +147,10 @@ class MainWidget(QWidget):
             Input: None
             Output: None
         '''
+
+        # Clear labels
+        self.messageFoundLabel.clear()
+        self.messageLabel.clear()
         # Store path to selected image file
         selectedImagePath = os.path.join(self.imagePath, self.imageSelector.currentText())
 
@@ -129,9 +160,31 @@ class MainWidget(QWidget):
 
         # Display image
         self.imageLabel.setPixmap(QPixmap(selectedImagePath))
+        if self.autoDecodeImage.isChecked():
+            self.decodeMessage()
 
-        # Display message
-        self.messageLabel.setText(extractMessage(selectedImagePath))
+
+    def decodeMessage(self):
+        ''' Extracts message out of image '''
+        # Store path to selected image file
+        selectedImagePath = os.path.join(self.imagePath, self.imageSelector.currentText())
+
+        # Extract message
+        encodedMessage = extractMessage(selectedImagePath)
+        if encodedMessage == '' or encodedMessage == 'No message found':
+            self.messageFoundLabel.setText("No message found")
+            self.messageLabel.clear()
+        else:
+            self.messageFoundLabel.setText("Encoded message:")
+            self.messageLabel.setText(encodedMessage)
+        
+
+    def toggleDecodeButton(self):
+        self.decodeMessage()
+        if self.autoDecodeImage.isChecked():
+            self.decodeButton.setEnabled(False)
+        else:
+            self.decodeButton.setEnabled(True)
 
 
 def main():
